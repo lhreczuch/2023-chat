@@ -6,7 +6,7 @@ client.connect(('192.168.55.111',55555))
 
 def send():
     while True:
-        messageOut = input('Me: ')
+        messageOut = f"{input('Me: ')}"
         client.send(messageOut.encode('utf8'))
 
 

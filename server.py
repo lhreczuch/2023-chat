@@ -15,7 +15,7 @@ def connectionWorks(clientConnection):
         messageIn = clientConnection.recv(1024).decode('utf8')
         print(messageIn)
         for client in clients:
-            clientConnection.send(messageIn.encode('utf8'))
+            client.send(messageIn.encode('utf8'))
 
 def receiveConnection(server):
     while True:
