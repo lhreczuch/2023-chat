@@ -8,26 +8,42 @@ server.bind((IP,55555))
 server.listen()
 
 clients = []
+nicknames = []
+
+currentUserData = {}
+
 
 def connectionWorks(clientConnection):
     
     while True: 
-        messageIn = clientConnection.recv(1024).decode('utf8')
-        print(messageIn)
-        for client in clients:
-            client.send(messageIn.encode('utf8'))
+        try:
+            messageIn = clientConnection.recv(1024).decode('utf8')
+            if not messageIn:
+                clientConnection.close()
+                break
+
+            for client in clients:
+                client.send(f"{currentUserData[clientConnection]}: {messageIn}".encode('utf8'))
+        except ConnectionResetError:
+            clientConnection.close()
+            clients.remove(clientConnection)
+            break
+        #trzeba usunac z tabeli polaczenie z klientem zeby nie probowal po rozlaczeniu do niego wysylas wiadomosci
 
 def receiveConnection(server):
     while True:
         
         clientConnection, addressIP = server.accept()
-        
+        nickOfUser = clientConnection.recv(1024).decode('utf8')
+
+        nicknames.append(nickOfUser)
+        clients.append(clientConnection)
+
+        currentUserData[clientConnection] = nickOfUser
 
         newChat = threading.Thread(target = connectionWorks, args = (clientConnection,))
         newChat.start()
-        clients.append(clientConnection)
-        print(clients)
-
+        
 
 print("Hello ! server starts runnin..")
 receiveThread = threading.Thread(target = receiveConnection,args=(server,))
