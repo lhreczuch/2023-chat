@@ -6,17 +6,19 @@ client.connect(('192.168.55.111',55555))
 
 def send():
     while True:
-        messageOut = f"{input('Me: ')}"
+        messageOut = input('')
         client.send(messageOut.encode('utf8'))
 
 
 def receive():
     while True:
+        
         messageIn = client.recv(1024).decode('utf8')
         print(messageIn)
         
 
 sendThread = threading.Thread(target = send)
-sendThread.start()
+
 receiveThread = threading.Thread(target = receive)
+sendThread.start()
 receiveThread.start()
