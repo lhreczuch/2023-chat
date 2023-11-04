@@ -1,3 +1,5 @@
+# for now it has to be in the same local connection as client
+
 import socket
 import threading
 import datetime
