@@ -1,3 +1,5 @@
+# for now it has to be in the same local connection as server
+
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTextEdit, QLineEdit, QPushButton, QAbstractScrollArea, QScrollArea
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
