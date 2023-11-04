@@ -27,11 +27,15 @@ def connectionWorks(clientConnection):
             # if not messageIn:
             #     clientConnection.close()
             #     break
-            
+            current_time = datetime.datetime.now()
+            formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+
             for client in connectedClients.keys():
                 # send to everyone except user that is sending message:
                 if client != currentKey:
-                    client.send(f"[{datetime.datetime.now()} {currentValue}]: {messageIn}".encode('utf8'))
+                    client.send(f"[{formatted_time} {currentValue}]: {messageIn}".encode('utf8'))
+                if client == currentKey:
+                    client.send(f"[{formatted_time} ME]: {messageIn}".encode('utf8'))
 
         except ConnectionResetError:
             clientConnection.close()

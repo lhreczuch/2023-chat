@@ -35,6 +35,8 @@ def clicked():
         try:
             messageOut = pole_wprowadzania.text()
             client.send(messageOut.encode('utf8'))
+            pole_wprowadzania.clear()
+            
         except ConnectionAbortedError and ConnectionResetError:
             pole_przewijane.setPlainText(f"{pole_przewijane.toPlainText()}\nstracono połączenie z serwerem!")
 
