@@ -8,41 +8,46 @@ print(IP)
 server.bind((IP,55555))
 server.listen()
 
-clients = []
-nicknames = []
-
-currentUserData = {}
-
+connectedClients = {}
 
 def connectionWorks(clientConnection):
     # active users:
-    print(f"Active users: {nicknames}")
+    print(f"Active users: {connectedClients.values()}")
 
     # who joined chat:
     
-    
+    currentValue = connectedClients[clientConnection]
+    currentKey = clientConnection
     # receiving message and sending it to all clients:
     while True: 
         try:
             messageIn = clientConnection.recv(1024).decode('utf8')
-            if not messageIn:
-                clientConnection.close()
-                break
+            # if not messageIn:
+            #     clientConnection.close()
+            #     break
             
-            for client in clients:
+            for client in connectedClients.keys():
                 # send to everyone except user that is sending message:
-                if client != clientConnection:
-                    client.send(f"[{datetime.datetime.now()} {currentUserData[clientConnection]} {id(clientConnection)}]: {messageIn}".encode('utf8'))
+                if client != currentKey:
+                    client.send(f"[{datetime.datetime.now()} {currentValue}]: {messageIn}".encode('utf8'))
 
         except ConnectionResetError:
             clientConnection.close()
-            clients.remove(clientConnection)
-            print(f"{datetime.datetime.now()} {currentUserData[clientConnection]} left the chat!")
+            
+            print(f"{datetime.datetime.now()} {currentValue} left the chat!")
+            
+            
 
-            for client in clients:
-                client.send(f"{currentUserData[clientConnection]} left the chat !".encode('utf8'))
-            nicknames.remove(currentUserData[clientConnection])
+            for client in connectedClients.keys():
+                try:
+                    client.send(f"{currentValue} left the chat !".encode('utf8'))
+                except OSError:
+                    continue
+            
+            del connectedClients[currentKey]
             break
+    print(f"Active users: {connectedClients.values()}")
+
         
 
 def receiveConnection(server):
@@ -52,12 +57,10 @@ def receiveConnection(server):
         nickOfUser = clientConnection.recv(1024).decode('utf8')
         print(f"{datetime.datetime.now()} {nickOfUser} joined chat!")
 
-        nicknames.append(nickOfUser)
-        clients.append(clientConnection)
 
-        currentUserData[clientConnection] = nickOfUser
+        connectedClients[clientConnection] = nickOfUser
         
-        for client in clients:
+        for client in connectedClients.keys():
             client.send(f"{datetime.datetime.now()} {nickOfUser} joined chat!".encode('utf8'))
 
         newChat = threading.Thread(target = connectionWorks, args = (clientConnection,))
