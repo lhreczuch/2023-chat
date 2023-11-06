@@ -10,67 +10,67 @@ print(IP)
 server.bind((IP,55555))
 server.listen()
 
-connectedClients = {}
+connected_clients = {}
 
-def connectionWorks(clientConnection):
+def connectionWorks(client_connection):
     # active users:
-    print(f"Active users: {connectedClients.values()}")
+    print(f"Active users: {connected_clients.values()}")
 
     # who joined chat:
     
-    currentValue = connectedClients[clientConnection]
-    currentKey = clientConnection
+    current_value = connected_clients[client_connection]
+    current_key = client_connection
     # receiving message and sending it to all clients:
     while True: 
         try:
-            messageIn = clientConnection.recv(1024).decode('utf8')
+            message_in = client_connection.recv(1024).decode('utf8')
 
             current_time = datetime.datetime.now()
             formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
 
-            for client in connectedClients.keys():
+            for client in connected_clients.keys():
                 # send to everyone except user that is sending message:
-                if client != currentKey:
-                    client.send(f"[{formatted_time}] [{currentValue}]: {messageIn}".encode('utf8'))
+                if client != current_key:
+                    client.send(f"[{formatted_time}] [{current_value}]: {message_in}".encode('utf8'))
                 # send message also to sender, but with "ME"
-                if client == currentKey:
-                    client.send(f"[{formatted_time}] [ME]: {messageIn}".encode('utf8'))
+                if client == current_key:
+                    client.send(f"[{formatted_time}] [ME]: {message_in}".encode('utf8'))
 
         except ConnectionResetError:
-            clientConnection.close()
+            client_connection.close()
             
-            print(f"{datetime.datetime.now()} {currentValue} left the chat!")
+            print(f"{datetime.datetime.now()} {current_value} left the chat!")
             
             
 
-            for client in connectedClients.keys():
+            for client in connected_clients.keys():
                 try:
-                    client.send(f"{currentValue} left the chat !".encode('utf8'))
+                    client.send(f"{current_value} left the chat !".encode('utf8'))
                 except OSError:
                     continue
             
-            del connectedClients[currentKey]
+            del connected_clients[current_key]
             break
-    print(f"Active users: {connectedClients.values()}")
+    print(f"Active users: {connected_clients.values()}")
 
         
 def receiveConnection(server):
     while True:
-        clientConnection, addressIP = server.accept()
+        client_connection, address_IP = server.accept()
        
-        nickOfUser = clientConnection.recv(1024).decode('utf8')
+        nick_of_user = client_connection.recv(1024).decode('utf8')
         
-        print(f"{datetime.datetime.now()} {nickOfUser} joined chat!")
+        print(f"{datetime.datetime.now()} {nick_of_user} joined chat!")
 
-        connectedClients[clientConnection] = nickOfUser
+        connected_clients[client_connection] = nick_of_user
         
-        for client in connectedClients.keys():
-            client.send(f"{datetime.datetime.now()} {nickOfUser} joined chat!".encode('utf8'))
+        for client in connected_clients.keys():
+            client.send(f"{datetime.datetime.now()} {nick_of_user} joined chat!".encode('utf8'))
             
-        newChat = threading.Thread(target = connectionWorks, args = (clientConnection,))
-        newChat.start()
+        new_chat = threading.Thread(target = connectionWorks, args = (client_connection,))
+        new_chat.start()
         
 
 print(f"{datetime.datetime.now()} Hello ! server starts runnin..")
-receiveThread = threading.Thread(target = receiveConnection,args=(server,))
-receiveThread.start()
+receive_thread = threading.Thread(target = receiveConnection,args=(server,))
+receive_thread.start()
