@@ -24,18 +24,17 @@ def connectionWorks(clientConnection):
     while True: 
         try:
             messageIn = clientConnection.recv(1024).decode('utf8')
-            # if not messageIn:
-            #     clientConnection.close()
-            #     break
+
             current_time = datetime.datetime.now()
             formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
 
             for client in connectedClients.keys():
                 # send to everyone except user that is sending message:
                 if client != currentKey:
-                    client.send(f"[{formatted_time} {currentValue}]: {messageIn}".encode('utf8'))
+                    client.send(f"[{formatted_time}] [{currentValue}]: {messageIn}".encode('utf8'))
+                # send message also to sender, but with "ME"
                 if client == currentKey:
-                    client.send(f"[{formatted_time} ME]: {messageIn}".encode('utf8'))
+                    client.send(f"[{formatted_time}] [ME]: {messageIn}".encode('utf8'))
 
         except ConnectionResetError:
             clientConnection.close()
@@ -55,20 +54,19 @@ def connectionWorks(clientConnection):
     print(f"Active users: {connectedClients.values()}")
 
         
-
 def receiveConnection(server):
     while True:
         clientConnection, addressIP = server.accept()
-        clientConnection.send("NICK".encode('utf8'))
+       
         nickOfUser = clientConnection.recv(1024).decode('utf8')
+        
         print(f"{datetime.datetime.now()} {nickOfUser} joined chat!")
-
 
         connectedClients[clientConnection] = nickOfUser
         
         for client in connectedClients.keys():
             client.send(f"{datetime.datetime.now()} {nickOfUser} joined chat!".encode('utf8'))
-
+            
         newChat = threading.Thread(target = connectionWorks, args = (clientConnection,))
         newChat.start()
         

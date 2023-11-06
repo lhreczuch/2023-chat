@@ -7,10 +7,8 @@ import socket
 import threading
 
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-client.connect(('192.168.55.111',55555))
 
 
-     
 
 class ReceiveThread(QThread):
     message_received = pyqtSignal(str)
@@ -19,12 +17,7 @@ class ReceiveThread(QThread):
         while True:
             try:
                 messageIn = client.recv(1024).decode('utf8')
-                if messageIn == "NICK":
-                     nick = pole_przewijane.toPlainText()
-                else:
-                     
-                    # print(messageIn)
-                    self.message_received.emit(messageIn)
+                self.message_received.emit(messageIn)
                 
             except ConnectionAbortedError and ConnectionResetError:
                 self.message_received.emit("Stracono połączenie z serwerem")
@@ -36,15 +29,25 @@ def clicked():
             messageOut = pole_wprowadzania.text()
             client.send(messageOut.encode('utf8'))
             pole_wprowadzania.clear()
-            
         except ConnectionAbortedError and ConnectionResetError:
             pole_przewijane.setPlainText(f"{pole_przewijane.toPlainText()}\nstracono połączenie z serwerem!")
 
 def nickSendButtonClicked():
+
+
     nickOut = pole_nick.text()
+    client.connect(('192.168.55.111',55555))
     client.send(nickOut.encode('utf8'))
+    
+    receive_thread = ReceiveThread()
+    receive_thread.message_received.connect(lambda message: pole_przewijane.setPlainText(f"{pole_przewijane.toPlainText()}\n{message}"))
+    receive_thread.start()
+
+    
     okno_nick.close()
     okno_glowne.show()
+    pole_przewijane.setPlainText(f"{nickOut}\n\n{pole_przewijane.toPlainText()}")
+    okno_glowne.setWindowTitle(f"Group CHAT [{nickOut}]")
 
 
 app = QApplication(sys.argv)
@@ -98,9 +101,7 @@ uklad.addWidget(scroll_area)
 uklad.addWidget(pole_wprowadzania)
 uklad.addWidget(przycisk)
 
-receive_thread = ReceiveThread()
-receive_thread.message_received.connect(lambda message: pole_przewijane.setPlainText(f"{pole_przewijane.toPlainText()}\n{message}"))
-receive_thread.start()
+
 
 
 okno_glowne.setLayout(uklad)
