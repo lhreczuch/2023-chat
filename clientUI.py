@@ -7,6 +7,7 @@ import socket
 import threading
 
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server_ip = '192.168.55.111'
 
 
 
@@ -36,7 +37,7 @@ def nickSendButtonClicked():
 
 
     nick_out = nick_field.text()
-    client.connect(('192.168.55.111',55555))
+    client.connect((server_ip,55555))
     client.send(nick_out.encode('utf8'))
     
     receive_thread = ReceiveThread()
