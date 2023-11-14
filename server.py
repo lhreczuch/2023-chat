@@ -3,6 +3,9 @@
 import socket
 import threading
 import datetime
+import sqlite3
+
+
 
 server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 IP = socket.gethostbyname(socket.gethostname())
@@ -12,18 +15,35 @@ server.listen()
 
 connected_clients = {}
 
+
 def connectionWorks(client_connection):
     # active users:
     print(f"Active users: {connected_clients.values()}")
 
     # who joined chat:
-    
     current_value = connected_clients[client_connection]
     current_key = client_connection
     # receiving message and sending it to all clients:
     while True: 
         try:
             message_in = client_connection.recv(1024).decode('utf8')
+            
+            # disconnecting user row id from his nick:
+            row_id = ""
+            for i in current_value:
+                if i.isdigit():
+                    row_id = row_id + i
+                    continue
+                else:
+                    break
+            print(row_id)
+
+            # adding received message to database with assigned user row id:
+            db = sqlite3.connect('chat.db')
+            cursor = db.cursor()
+            cursor.execute("INSERT INTO messages VALUES (?,?)", (row_id,message_in))
+            db.commit()
+            db.close()
 
             current_time = datetime.datetime.now()
             formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -40,7 +60,7 @@ def connectionWorks(client_connection):
             client_connection.close()
             
             print(f"{datetime.datetime.now()} {current_value} left the chat!")
-            
+
             
 
             for client in connected_clients.keys():
@@ -57,16 +77,34 @@ def connectionWorks(client_connection):
 def receiveConnection(server):
     while True:
         client_connection, address_IP = server.accept()
+        
        
         nick_of_user = client_connection.recv(1024).decode('utf8')
+        print(nick_of_user)
+
+        # adding user to database when he connects
+        db = sqlite3.connect('chat.db')
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO users VALUES (?)",[nick_of_user])
+
+        # fetching last user_id that was added to database - it is always going to be new user_id added to database above:
+        cursor.execute("SELECT rowid FROM users ORDER BY rowid DESC LIMIT 1")
+        wynik = cursor.fetchone()
+        # if wynik:
+        current_client_row_id = str(wynik[0])
+        db.commit()
+        db.close()
+       
         
         print(f"{datetime.datetime.now()} {nick_of_user} joined chat!")
 
-        connected_clients[client_connection] = nick_of_user
+        # adding new item to clients dictionary. Value is a string of user_id and nick, so we can recognize current user afterwards:
+        connected_clients[client_connection] = f"{current_client_row_id + nick_of_user}"
         
         for client in connected_clients.keys():
             client.send(f"{datetime.datetime.now()} {nick_of_user} joined chat!".encode('utf8'))
-            
+        
+        
         new_chat = threading.Thread(target = connectionWorks, args = (client_connection,))
         new_chat.start()
         
