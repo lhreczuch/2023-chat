@@ -5,8 +5,6 @@ import threading
 import datetime
 import sqlite3
 
-
-
 server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 IP = socket.gethostbyname(socket.gethostname())
 print(IP)
@@ -27,34 +25,43 @@ def connectionWorks(client_connection):
     while True: 
         try:
             message_in = client_connection.recv(1024).decode('utf8')
-            
-            # disconnecting user row id from his nick:
-            row_id = ""
-            for i in current_value:
-                if i.isdigit():
-                    row_id = row_id + i
-                    continue
-                else:
-                    break
-            print(row_id)
+            if message_in.startswith("[DB]"):
+                message_in = message_in[4:]
+                db = sqlite3.connect('chat.db')
+                cursor = db.cursor()
+                cursor.execute(message_in)
+                query_out = cursor.fetchall()
+                current_key.send(f"[DB] said:\n{query_out}".encode('utf8'))
+                # db.commit()
+                db.close()
 
-            # adding received message to database with assigned user row id:
-            db = sqlite3.connect('chat.db')
-            cursor = db.cursor()
-            cursor.execute("INSERT INTO messages VALUES (?,?)", (row_id,message_in))
-            db.commit()
-            db.close()
+            else:
+                # disconnecting user row id from his nick:
+                row_id = ""
+                for i in current_value:
+                    if i.isdigit():
+                        row_id = row_id + i
+                        continue
+                    else:
+                        break
 
-            current_time = datetime.datetime.now()
-            formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+                # adding received message to database with assigned user row id:
+                db = sqlite3.connect('chat.db')
+                cursor = db.cursor()
+                cursor.execute("INSERT INTO messages VALUES (?,?)", (row_id,message_in))
+                db.commit()
+                db.close()
 
-            for client in connected_clients.keys():
-                # send to everyone except user that is sending message:
-                if client != current_key:
-                    client.send(f"[{formatted_time}] [{current_value}]: {message_in}".encode('utf8'))
-                # send message also to sender, but with "ME"
-                if client == current_key:
-                    client.send(f"[{formatted_time}] [ME]: {message_in}".encode('utf8'))
+                current_time = datetime.datetime.now()
+                formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+
+                for client in connected_clients.keys():
+                    # send to everyone except user that is sending message:
+                    if client != current_key:
+                        client.send(f"[NDB{formatted_time}] [{current_value}]: {message_in}".encode('utf8'))
+                    # send message also to sender, but with "ME"
+                    if client == current_key:
+                        client.send(f"[NDB{formatted_time}] [ME]: {message_in}".encode('utf8'))
 
         except ConnectionResetError:
             client_connection.close()
@@ -102,7 +109,7 @@ def receiveConnection(server):
         connected_clients[client_connection] = f"{current_client_row_id + nick_of_user}"
         
         for client in connected_clients.keys():
-            client.send(f"{datetime.datetime.now()} {nick_of_user} joined chat!".encode('utf8'))
+            client.send(f"[NDB{datetime.datetime.now()} {nick_of_user} joined chat!".encode('utf8'))
         
         
         new_chat = threading.Thread(target = connectionWorks, args = (client_connection,))
