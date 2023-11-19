@@ -37,11 +37,13 @@ def connectionWorks(client_connection):
                 db_message_back = ''
                 for row in query_out:
                     db_message_back += ": ".join(map(str,row))+'\n'
+                print(db_message_back)
                 current_key.send(f"[DB] said:\n{db_message_back}".encode('utf8'))
                 # db.commit()
                 db.close()
 
-            else:
+            elif message_in.startswith("[NDB]"):
+                message_in = message_in[5:]
                 # disconnecting user row id from his nick:
                 row_id = ""
                 for i in current_value:
@@ -64,10 +66,10 @@ def connectionWorks(client_connection):
                 for client in connected_clients.keys():
                     # send to everyone except user that is sending message:
                     if client != current_key:
-                        client.send(f"[NDB{formatted_time}] [{current_value}]: {message_in}".encode('utf8'))
+                        client.send(f"[NDB]{formatted_time}] [{current_value}]: {message_in}".encode('utf8'))
                     # send message also to sender, but with "ME"
                     if client == current_key:
-                        client.send(f"[NDB{formatted_time}] [ME]: {message_in}".encode('utf8'))
+                        client.send(f"[NDB]{formatted_time}] [ME]: {message_in}".encode('utf8'))
 
         except ConnectionResetError:
             client_connection.close()
@@ -115,7 +117,7 @@ def receiveConnection(server):
         connected_clients[client_connection] = f"{current_client_row_id + nick_of_user}"
         
         for client in connected_clients.keys():
-            client.send(f"[NDB{datetime.datetime.now()} {nick_of_user} joined chat!".encode('utf8'))
+            client.send(f"[NDB]{datetime.datetime.now()} {nick_of_user} joined chat!".encode('utf8'))
         
         
         new_chat = threading.Thread(target = connectionWorks, args = (client_connection,))

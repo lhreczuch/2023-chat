@@ -27,8 +27,9 @@ class ReceiveThread(QThread):
         while True:
             
             try:
-                message_in = client.recv(1024).decode('utf8','ignore')
-                if message_in.startswith("[NDB"):
+                message_in = client.recv(4096).decode('utf8','ignore')
+                if message_in.startswith("[NDB]"):
+                    message_in = message_in[5:]
                     # print(message_in)
                     self.message_received.emit(message_in)
                 elif message_in.startswith("[DB]"):
@@ -51,15 +52,15 @@ def display_in_searching_window(message):
 def searching():
     
     if searching_combo_Box.currentIndex() == 0:
-        all_query = f"[DB]SELECT date,nick,value FROM users,messages WHERE users.rowid = messages.user_id AND users.nick LIKE '%{searching_line_edit.text()}%' OR messages.value LIKE '%{searching_line_edit.text()}%'"
+        all_query = f"[DB]SELECT date,nick,value FROM users,messages WHERE users.rowid = messages.user_id AND (users.nick LIKE '%{searching_line_edit.text()}%' OR messages.value LIKE '%{searching_line_edit.text()}%')"
         client.send(all_query.encode('utf8'))
 
     elif searching_combo_Box.currentIndex() == 1:
-        user_query = f"[DB]SELECT date,nick,value FROM users,messages WHERE users.rowid = messages.user_id AND users.nick LIKE '%{searching_line_edit.text()}%'"
+        user_query = f"[DB]SELECT date,nick,value FROM users,messages WHERE users.rowid = messages.user_id AND (users.nick LIKE '%{searching_line_edit.text()}%')"
         client.send(user_query.encode('utf8'))
 
     elif searching_combo_Box.currentIndex() == 2:
-        msg_query = f"[DB]SELECT date,nick,value FROM users,messages WHERE users.rowid = messages.user_id AND messages.value LIKE '%{searching_line_edit.text()}%'"
+        msg_query = f"[DB]SELECT date,nick,value FROM users,messages WHERE users.rowid = messages.user_id AND (messages.value LIKE '%{searching_line_edit.text()}%')"
         client.send(msg_query.encode('utf8'))
     searching_line_edit.clear()
 
@@ -67,7 +68,7 @@ def searching():
 def clicked():
     
         try:
-            message_out = message_input_field.text()
+            message_out = '[NDB]'+message_input_field.text()
             client.send(message_out.encode('utf8'))
             message_input_field.clear()
         except ConnectionAbortedError and ConnectionResetError:
