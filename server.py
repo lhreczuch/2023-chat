@@ -25,13 +25,19 @@ def connectionWorks(client_connection):
     while True: 
         try:
             message_in = client_connection.recv(1024).decode('utf8')
+            current_time = datetime.datetime.now()
+            formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+
             if message_in.startswith("[DB]"):
                 message_in = message_in[4:]
                 db = sqlite3.connect('chat.db')
                 cursor = db.cursor()
                 cursor.execute(message_in)
                 query_out = cursor.fetchall()
-                current_key.send(f"[DB] said:\n{query_out}".encode('utf8'))
+                db_message_back = ''
+                for row in query_out:
+                    db_message_back += ": ".join(map(str,row))+'\n'
+                current_key.send(f"[DB] said:\n{db_message_back}".encode('utf8'))
                 # db.commit()
                 db.close()
 
@@ -48,7 +54,7 @@ def connectionWorks(client_connection):
                 # adding received message to database with assigned user row id:
                 db = sqlite3.connect('chat.db')
                 cursor = db.cursor()
-                cursor.execute("INSERT INTO messages VALUES (?,?)", (row_id,message_in))
+                cursor.execute("INSERT INTO messages VALUES (?,?,?)", (row_id,message_in,formatted_time))
                 db.commit()
                 db.close()
 

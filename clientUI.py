@@ -49,17 +49,19 @@ def display_in_searching_window(message):
 
 
 def searching():
+    
     if searching_combo_Box.currentIndex() == 0:
-        all_query = f"[DB]SELECT nick,value FROM users,messages WHERE users.rowid = messages.user_id AND users.nick LIKE '%{searching_line_edit.text()}%' OR messages.value LIKE '%{searching_line_edit.text()}%'"
+        all_query = f"[DB]SELECT date,nick,value FROM users,messages WHERE users.rowid = messages.user_id AND users.nick LIKE '%{searching_line_edit.text()}%' OR messages.value LIKE '%{searching_line_edit.text()}%'"
         client.send(all_query.encode('utf8'))
 
     elif searching_combo_Box.currentIndex() == 1:
-        user_query = f"[DB]SELECT nick,value FROM users,messages WHERE users.rowid = messages.user_id AND users.nick LIKE '%{searching_line_edit.text()}%'"
+        user_query = f"[DB]SELECT date,nick,value FROM users,messages WHERE users.rowid = messages.user_id AND users.nick LIKE '%{searching_line_edit.text()}%'"
         client.send(user_query.encode('utf8'))
 
     elif searching_combo_Box.currentIndex() == 2:
-        msg_query = f"[DB]SELECT nick,value FROM users,messages WHERE users.rowid = messages.user_id AND messages.value LIKE '%{searching_line_edit.text()}%'"
+        msg_query = f"[DB]SELECT date,nick,value FROM users,messages WHERE users.rowid = messages.user_id AND messages.value LIKE '%{searching_line_edit.text()}%'"
         client.send(msg_query.encode('utf8'))
+    searching_line_edit.clear()
 
 
 def clicked():
