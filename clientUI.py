@@ -1,4 +1,4 @@
-# for now it has to be in the same local connection as server
+
 
 import sys
 from PyQt5.QtWidgets import QMainWindow, QComboBox, QMenu,QMenuBar, QStatusBar, QApplication, QWidget, QVBoxLayout, QTextEdit, QLineEdit, QPushButton, QAbstractScrollArea, QScrollArea, QToolBar
