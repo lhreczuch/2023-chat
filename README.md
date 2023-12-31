@@ -1,4 +1,4 @@
-# chat
+# sockets chat
 Chat (client-server-client)
 
 Server file uses local IP of device that file is placed in, so you don't have to edit server file.
